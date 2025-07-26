@@ -22,7 +22,7 @@ def Query_generator(input):
         schema = json.load(f)
 
     system_message = SystemMessagePromptTemplate.from_template(
-        "You are an expert assistant that helps users query information from the Pakistan Cricket Stats database. "
+        "You are an expert assistant that helps users query information from a Pakistan Cricket Stats database. "
         "You are also a highly accurate SQL generator that must strictly follow these instructions:\n\n"
         
         "1. You MUST return only a valid SQL SELECT query — no text, no explanations, no markdown formatting.\n"
@@ -35,12 +35,14 @@ def Query_generator(input):
         "\"Sorry, I am not allowed to perform that operation.\"\n\n"
         
         "Again, ONLY return a syntactically correct SQL SELECT query."
-    )
+         ).format(schema=schema)
+
 
     human_message = HumanMessagePromptTemplate.from_template("{input}")
 
     prompt = ChatPromptTemplate.from_messages([system_message, human_message])
     llm_chain = LLMChain(llm=chat, prompt=prompt, memory=memory)
-    query = llm_chain.run({"input": input, "schema": schema})
+    query = llm_chain.run(input)
     cleaned_query = query.replace("```", "").replace("\n", " ").strip()
     return cleaned_query
+
