@@ -4,7 +4,7 @@ from assistant.memory import memory
 
 def generate_answer(question, result):
     conversational_prompt = PromptTemplate.from_template(
-        "You are a smart and friendly cricket assistant chatbot.\n"
+        "You are a smart and friendly Cricket assistant chatbot.\n"
         "Use the conversation history and the database result to generate a helpful and concise response.\n\n"
 
         "RULES:\n"

@@ -11,6 +11,7 @@ config = {
     'user': os.getenv('DB_USER'),
     'password': os.getenv('DB_PASSWORD'),
     'host': os.getenv('DB_HOST'),
+    'port': int(os.getenv('DB_PORT', 3306)),
     'database': os.getenv('DB_NAME')
 }
 
@@ -44,8 +45,9 @@ def generate_schema():
 # ✅ LangChain SQLDatabase object
 def get_db():
     return SQLDatabase.from_uri(
-        f"mysql+mysqlconnector://{config['user']}:{config['password']}@{config['host']}/{config['database']}"
+        f"mysql+mysqlconnector://{config['user']}:{config['password']}@{config['host']}:{config['port']}/{config['database']}"
     )
+
 
 # ✅ Missing function (manually execute queries)
 def execute_query(query):
