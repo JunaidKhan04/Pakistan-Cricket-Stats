@@ -5,7 +5,6 @@ from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, H
 from langchain_groq import ChatGroq
 from assistant.memory import memory
 from dotenv import load_dotenv
-from memory import memory
 
 
 load_dotenv()
