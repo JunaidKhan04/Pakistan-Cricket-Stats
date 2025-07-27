@@ -6,15 +6,16 @@ from langchain_community.utilities import SQLDatabase
 
 load_dotenv()
 
-# Config from .env
+# ✅ Add port support for Railway & Render
 config = {
     'user': os.getenv('DB_USER'),
     'password': os.getenv('DB_PASSWORD'),
     'host': os.getenv('DB_HOST'),
-    'database': os.getenv('DB_NAME')
+    'database': os.getenv('DB_NAME'),
+    'port': int(os.getenv('DB_PORT'))
 }
 
-# ✅ Function to generate schema and write to file
+# ✅ Schema generation
 def generate_schema():
     conn = mysql.connector.connect(**config)
     cursor = conn.cursor()
@@ -41,13 +42,13 @@ def generate_schema():
 
     return schema
 
-# ✅ LangChain SQLDatabase object
+# ✅ LangChain SQL DB for LLM
 def get_db():
     return SQLDatabase.from_uri(
-        f"mysql+mysqlconnector://{config['user']}:{config['password']}@{config['host']}/{config['database']}"
+        f"mysql+mysqlconnector://{config['user']}:{config['password']}@{config['host']}:{config['port']}/{config['database']}"
     )
 
-# ✅ Missing function (manually execute queries)
+# ✅ Custom SQL execution
 def execute_query(query):
     conn = mysql.connector.connect(**config)
     cursor = conn.cursor()
@@ -62,4 +63,3 @@ def execute_query(query):
     finally:
         cursor.close()
         conn.close()
-
