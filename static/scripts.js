@@ -1,125 +1,102 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const chatForm = document.getElementById('chat-form');
-    const chatMessages = document.getElementById('chat-messages');
-    const userInput = document.getElementById('user_input');
+document.addEventListener("DOMContentLoaded", function () {
+    const chatForm = document.getElementById("chat-form");
+    const chatMessages = document.getElementById("chat-messages");
+    const userInput = document.getElementById("user_input");
 
-    // Scroll to bottom of chat messages
+    // Auto-scroll to bottom
     function scrollToBottom() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // Add a message to the chat
-    function addMessage(content, isUser) {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message');
-        messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
-        
-        const messageContent = document.createElement('div');
-        messageContent.classList.add('message-content');
+    // Add message to chat
+    function addMessage(content, isUser, time = "Just now") {
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message", isUser ? "user-message" : "bot-message");
+
+        const messageContent = document.createElement("div");
+        messageContent.classList.add("message-content");
         messageContent.innerHTML = `<p>${content}</p>`;
-        
-        const now = new Date();
-        const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const messageTime = document.createElement('div');
-        messageTime.classList.add('message-time');
-        messageTime.textContent = timeString;
-        
+
+        const messageTime = document.createElement("div");
+        messageTime.classList.add("message-time");
+        messageTime.textContent = time;
+
         messageDiv.appendChild(messageContent);
         messageDiv.appendChild(messageTime);
         chatMessages.appendChild(messageDiv);
-        
+
         scrollToBottom();
     }
 
-    // Handle form submission with AJAX
-    chatForm.addEventListener('submit', function(e) {
+    // Speak bot's reply using a female voice if available
+    function speakText(text) {
+        const synth = window.speechSynthesis;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "en-US";
+
+        const setVoice = () => {
+            const voices = synth.getVoices();
+            const femaleVoice = voices.find(voice =>
+                voice.name.toLowerCase().includes("female") ||
+                voice.name.includes("Google US English") || // Chrome
+                voice.name.includes("Samantha") ||           // macOS
+                voice.name.includes("Microsoft Zira")        // Windows
+            );
+
+            if (femaleVoice) {
+                utterance.voice = femaleVoice;
+            }
+
+            synth.speak(utterance);
+        };
+
+        // Handle async loading of voices
+        if (synth.getVoices().length === 0) {
+            synth.addEventListener("voiceschanged", setVoice);
+        } else {
+            setVoice();
+        }
+    }
+
+    // Handle form submit
+    chatForm.addEventListener("submit", function (e) {
         e.preventDefault();
         const message = userInput.value.trim();
-        
-        if (message) {
-            // Add user message to chat immediately
-            addMessage(message, true);
-            
-            // Clear input
-            userInput.value = '';
-            
-            // Send message to server using AJAX
-            fetch('/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `user_input=${encodeURIComponent(message)}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                const answer = data.answer || "I didn't understand that.";
-                addMessage(answer, false);
-            })
+        if (!message) return;
 
-            .catch(error => {
-                console.error('Error:', error);
-                addMessage("Sorry, I'm having trouble connecting to the server.", false);
-            });
-        }
-    });
-
-    // Initial scroll to bottom
-    scrollToBottom();
-
-    // Auto-scroll when new messages are added
-    const observer = new MutationObserver(scrollToBottom);
-    observer.observe(chatMessages, { childList: true });
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("chat-form");
-    const messages = document.getElementById("chat-messages");
-
-    form.addEventListener("submit", function (e) {
-        e.preventDefault();
-
-        const userInput = document.getElementById("user_input").value.trim();
-        if (!userInput) return;
-
-        // Add user message
-        addMessage("user", userInput);
+        // Add user's message
+        addMessage(message, true);
 
         // Clear input
-        document.getElementById("user_input").value = "";
+        userInput.value = "";
 
-        // Send to Flask
+        // Send to server
         fetch("/chat", {
             method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `user_input=${encodeURIComponent(userInput)}`
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `user_input=${encodeURIComponent(message)}`
         })
-        .then(res => res.json())
+        .then(response => response.json())
         .then(data => {
-            const botMessage = data.answer;
-            const time = data.time;
+            const botMessage = data.answer || "I didn't understand that.";
+            const time = data.time || "Just now";
 
-            // Add bot message
-            addMessage("bot", botMessage, time);
-
-            // 🔊 Make the bot speak
+            // Add bot's message and speak it
+            addMessage(botMessage, false, time);
             speakText(botMessage);
         })
-        .catch(err => {
-            console.error("Error:", err);
-            addMessage("bot", "Sorry, an error occurred.");
+        .catch(error => {
+            console.error("Error:", error);
+            addMessage("Sorry, I'm having trouble connecting to the server.", false);
         });
     });
 
-    function addMessage(sender, text, time = "Just now") {
-        const messageDiv = document.createElement("div");
-        messageDiv.className = `message ${sender}-message`;
+    // Initial scroll
+    scrollToBottom();
 
-        messageDiv.innerHTML = `
-            <div class="message-content"><p>${text}</p></div>
-            <div class="message-time">${time}</div>
-        `;
-        messages.appendChild(messageDiv);
-        messages.scrollTop = messages.scrollHeight;
-    }
+    // Auto-scroll on new messages
+    const observer = new MutationObserver(scrollToBottom);
+    observer.observe(chatMessages, { childList: true });
 });
