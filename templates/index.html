@@ -1,22 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Pakistan Cricket Assistant</title>
-    <link rel="stylesheet" href="/static/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
 <body>
     <div class="chat-container">
-        <div class="chat-header">
-            <h1>Pakistan Cricket Stats</h1>
-            <div class="bot-info">
-                <i class="fas fa-robot"></i>
-                <span>Online</span>
+        <!-- 💬 Header -->
+        <div class="chat-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background-color: #7a5dfd; color: white;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <h1 style="margin: 0;">Pakistan Cricket Stats</h1>
+                <div class="bot-info" style="display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-robot"></i>
+                    <span>Online</span>
+                </div>
+            </div>
+
+            <!-- 🔧 Controls (right-aligned) -->
+            <div class="chat-controls" style="display: flex; align-items: center; gap: 10px;">
+                <button id="clear-chat-btn" title="Clear Chat">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button id="save-chat-btn" title="Save Chat">
+                    <i class="fas fa-download"></i>
+                </button>
+                <select id="voiceSelect" title="Choose Voice"></select>
             </div>
         </div>
-        
+
+        <!-- 📩 Chat Messages -->
         <div class="chat-messages" id="chat-messages">
             <div class="message bot-message">
                 <div class="message-content">
@@ -26,31 +41,24 @@
             </div>
         </div>
 
-        <form class="chat-input" id="chat-form">
-            <input type="text" id="user_input" name="user_input" placeholder="Type your message here..." autocomplete="on" required>
+        <!-- ✍️ Chat Input -->
+        <form class="chat-input" id="chat-form" style="display: flex; gap: 10px; padding: 10px 20px;">
+            <input type="text" id="user_input" name="user_input" placeholder="Type your message here..." autocomplete="on" required style="flex: 1; padding: 8px;" />
             <button type="submit">
                 <i class="fas fa-paper-plane"></i>
             </button>
-            <!-- 🎙️ Microphone Button -->
+            <!-- 🎙️ Microphone -->
             <button type="button" onclick="startRecognition()" title="Speak">
                 <i class="fas fa-microphone"></i>
             </button>
         </form>
     </div>
 
-    <!-- Your existing scripts.js -->
+    <!-- 📜 Chat Logic -->
     <script src="/static/scripts.js"></script>
 
-    <!-- 🎤 Voice-to-Text + 🔊 Text-to-Speech -->
+    <!-- 🎤 Voice Recognition -->
     <script>
-        // Text-to-Speech: bot speaks the reply
-        function speakText(text) {
-            const synth = window.speechSynthesis;
-            const utterance = new SpeechSynthesisUtterance(text);
-            synth.speak(utterance);
-        }
-
-        // Speech Recognition: user speaks the question
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'en-US';
 
@@ -61,22 +69,8 @@
         recognition.onresult = function(event) {
             const transcript = event.results[0][0].transcript;
             document.getElementById('user_input').value = transcript;
-
-            // Optionally auto-submit the form
             document.getElementById('chat-form').requestSubmit();
         };
     </script>
-
-    <script>
-    function speakText(text) {
-        const synth = window.speechSynthesis;
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US'; // Optional: set voice/lang
-        synth.speak(utterance);
-    }
-    </script>
 </body>
 </html>
-
-
-

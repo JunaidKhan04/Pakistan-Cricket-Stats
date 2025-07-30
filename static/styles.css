@@ -36,23 +36,32 @@ body {
     overflow: hidden;
 }
 
+/* 🔧 Fix header layout to align left + right */
 .chat-header {
     background-color: var(--primary-color);
     color: white;
     padding: 20px;
-    text-align: center;
-    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Title and bot-info group */
+.chat-header > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }
 
 .chat-header h1 {
     font-size: 1.5rem;
-    margin-bottom: 5px;
+    margin-bottom: 0;
 }
 
 .bot-info {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
     font-size: 0.9rem;
 }
@@ -61,6 +70,14 @@ body {
     color: var(--success-color);
 }
 
+/* 🔧 Control buttons align right */
+.chat-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Chat area */
 .chat-messages {
     flex: 1;
     padding: 20px;
@@ -174,8 +191,18 @@ body {
         height: 90vh;
         border-radius: 0;
     }
-    
+
     body {
         padding: 0;
+    }
+
+    .chat-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .chat-controls {
+        align-self: flex-end;
     }
 }
