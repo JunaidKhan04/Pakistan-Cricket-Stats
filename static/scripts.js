@@ -71,3 +71,55 @@ document.addEventListener('DOMContentLoaded', function() {
     const observer = new MutationObserver(scrollToBottom);
     observer.observe(chatMessages, { childList: true });
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("chat-form");
+    const messages = document.getElementById("chat-messages");
+
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const userInput = document.getElementById("user_input").value.trim();
+        if (!userInput) return;
+
+        // Add user message
+        addMessage("user", userInput);
+
+        // Clear input
+        document.getElementById("user_input").value = "";
+
+        // Send to Flask
+        fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `user_input=${encodeURIComponent(userInput)}`
+        })
+        .then(res => res.json())
+        .then(data => {
+            const botMessage = data.answer;
+            const time = data.time;
+
+            // Add bot message
+            addMessage("bot", botMessage, time);
+
+            // 🔊 Make the bot speak
+            speakText(botMessage);
+        })
+        .catch(err => {
+            console.error("Error:", err);
+            addMessage("bot", "Sorry, an error occurred.");
+        });
+    });
+
+    function addMessage(sender, text, time = "Just now") {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${sender}-message`;
+
+        messageDiv.innerHTML = `
+            <div class="message-content"><p>${text}</p></div>
+            <div class="message-time">${time}</div>
+        `;
+        messages.appendChild(messageDiv);
+        messages.scrollTop = messages.scrollHeight;
+    }
+});

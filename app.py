@@ -23,7 +23,7 @@ def chat():
     return jsonify({"answer": answer, "time": time})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=3306)
+    app.run(host="0.0.0.0", port=5000)
 
 from flask import Flask, request, jsonify, render_template
 from assistant.generate_answer import generate_answer

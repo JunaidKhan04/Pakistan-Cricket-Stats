@@ -66,5 +66,17 @@
             document.getElementById('chat-form').requestSubmit();
         };
     </script>
+
+    <script>
+    function speakText(text) {
+        const synth = window.speechSynthesis;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US'; // Optional: set voice/lang
+        synth.speak(utterance);
+    }
+    </script>
 </body>
 </html>
+
+
+
