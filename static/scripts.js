@@ -5,21 +5,45 @@ document.addEventListener("DOMContentLoaded", function () {
     const clearBtn = document.getElementById("clear-chat-btn");
     const saveBtn = document.getElementById("save-chat-btn");
     const voiceSelect = document.getElementById("voiceSelect");
+    const micBtn = document.getElementById("mic-btn");
+    const voiceToggleBtn = document.getElementById("voice-toggle-btn");
+    const voiceIcon = document.getElementById("voice-icon");
 
     let selectedVoice = null;
+    let isSpeaking = false;
+    let isRecording = false;
+    let recognition = null;
+    let voiceEnabled = true;
+    const synth = window.speechSynthesis;
+    let currentUtterance = null;
 
-    // Auto-scroll to bottom
+    window.toggleVoiceDropdown = function () {
+        const dropdown = document.getElementById("voiceDropdown");
+        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+    };
+
+    window.setSelectedVoice = function (el) {
+        const voices = speechSynthesis.getVoices();
+        const index = parseInt(el.value);
+        selectedVoice = voices[index];
+    };
+
     function scrollToBottom() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // Add message to chat
-    function addMessage(content, isUser, time = "Just now") {
+    function getCurrentTime() {
+        const now = new Date();
+        return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function addMessage(content, isUser, time = getCurrentTime()) {
         const messageDiv = document.createElement("div");
         messageDiv.classList.add("message", isUser ? "user-message" : "bot-message");
 
         const messageContent = document.createElement("div");
         messageContent.classList.add("message-content");
+        if (!isUser) messageContent.classList.add("animate-fade");
         messageContent.innerHTML = `<p>${content}</p>`;
 
         const messageTime = document.createElement("div");
@@ -33,9 +57,10 @@ document.addEventListener("DOMContentLoaded", function () {
         scrollToBottom();
     }
 
-    // Speak text using selected voice
     function speakText(text) {
-        const synth = window.speechSynthesis;
+        if (!voiceEnabled) return;
+
+        stopSpeaking();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = "en-US";
 
@@ -43,13 +68,72 @@ document.addEventListener("DOMContentLoaded", function () {
             utterance.voice = selectedVoice;
         }
 
+        isSpeaking = true;
+        currentUtterance = utterance;
+
+        utterance.onend = () => {
+            isSpeaking = false;
+            currentUtterance = null;
+        };
+
         synth.speak(utterance);
     }
 
-    // Populate voice selector
+    function stopSpeaking() {
+        if (synth.speaking || isSpeaking) {
+            synth.cancel();
+            isSpeaking = false;
+            currentUtterance = null;
+        }
+    }
+
+    function startRecording() {
+        if (!('webkitSpeechRecognition' in window)) {
+            alert('Speech Recognition not supported');
+            return;
+        }
+
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => isRecording = true;
+        recognition.onend = () => isRecording = false;
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            userInput.value = transcript;
+            chatForm.dispatchEvent(new Event('submit'));
+        };
+
+        recognition.start();
+    }
+
+    function stopRecording() {
+        if (recognition) {
+            recognition.stop();
+            isRecording = false;
+        }
+    }
+
+    if (micBtn) {
+        micBtn.addEventListener("click", () => {
+            if (isSpeaking || synth.speaking) {
+                stopSpeaking();
+                return;
+            }
+
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+    }
+
     function populateVoiceList() {
         const voices = speechSynthesis.getVoices();
-        voiceSelect.innerHTML = "";
+        voiceSelect.innerHTML = '<option disabled selected hidden>Select voice</option>';
 
         voices.forEach((voice, index) => {
             const option = document.createElement("option");
@@ -58,7 +142,6 @@ document.addEventListener("DOMContentLoaded", function () {
             voiceSelect.appendChild(option);
         });
 
-        // Try to select a preferred voice
         const preferredVoice = voices.find(v =>
             v.name.toLowerCase().includes("female") ||
             v.name.includes("Google US English") ||
@@ -68,54 +151,43 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const defaultIndex = voices.indexOf(preferredVoice);
         if (defaultIndex !== -1) {
-            voiceSelect.selectedIndex = defaultIndex;
+            voiceSelect.selectedIndex = defaultIndex + 1;
             selectedVoice = voices[defaultIndex];
-        } else if (voices.length > 0) {
-            selectedVoice = voices[0];
         }
     }
 
-    // On voice selection change
-    voiceSelect.addEventListener("change", () => {
-        const voices = speechSynthesis.getVoices();
-        selectedVoice = voices[voiceSelect.value];
-    });
-
-    // Refresh voice list
     if (speechSynthesis.onvoiceschanged !== undefined) {
         speechSynthesis.onvoiceschanged = populateVoiceList;
     }
+    populateVoiceList();
 
-    // Handle form submit
     chatForm.addEventListener("submit", function (e) {
         e.preventDefault();
         const message = userInput.value.trim();
         if (!message) return;
 
+        stopSpeaking();
+        stopRecording();
+
         addMessage(message, true);
         userInput.value = "";
 
-        // Typing message
         const typingMsg = document.createElement("div");
         typingMsg.classList.add("message", "bot-message");
-        typingMsg.innerHTML = `<div class="message-content"><p><em>Typing...</em></p></div>`;
+        typingMsg.innerHTML = `<div class="message-content"><p><em>Responding...</em></p></div>`;
         chatMessages.appendChild(typingMsg);
         scrollToBottom();
 
-        // Fetch response from server
         fetch("/chat", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: `user_input=${encodeURIComponent(message)}`
         })
             .then(response => response.json())
             .then(data => {
                 typingMsg.remove();
                 const botMessage = data.answer || "I didn't understand that.";
-                const time = data.time || "Just now";
-                addMessage(botMessage, false, time);
+                addMessage(botMessage, false);
                 speakText(botMessage);
             })
             .catch(error => {
@@ -125,14 +197,14 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     });
 
-    // Clear Chat
     if (clearBtn) {
         clearBtn.addEventListener("click", () => {
             chatMessages.innerHTML = "";
+            stopSpeaking();
+            stopRecording();
         });
     }
 
-    // Save Chat
     if (saveBtn) {
         saveBtn.addEventListener("click", () => {
             let content = "";
@@ -151,7 +223,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Copy message on click (toast instead of alert)
     chatMessages.addEventListener("click", (e) => {
         const msg = e.target.closest(".message-content");
         if (msg) {
@@ -160,7 +231,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Toast message function
     function showToast(message) {
         const toast = document.createElement("div");
         toast.textContent = message;
@@ -177,7 +247,20 @@ document.addEventListener("DOMContentLoaded", function () {
         setTimeout(() => toast.remove(), 2000);
     }
 
-    // Auto-scroll on load and on new messages
+    // 🔊 Voice Toggle Icon Logic
+    if (voiceToggleBtn && voiceIcon) {
+        voiceToggleBtn.addEventListener("click", () => {
+            voiceEnabled = !voiceEnabled;
+
+            if (!voiceEnabled && synth.speaking) {
+                stopSpeaking();
+            }
+
+            voiceIcon.classList.toggle("fa-volume-up", voiceEnabled);
+            voiceIcon.classList.toggle("fa-volume-mute", !voiceEnabled);
+        });
+    }
+
     scrollToBottom();
     const observer = new MutationObserver(scrollToBottom);
     observer.observe(chatMessages, { childList: true });

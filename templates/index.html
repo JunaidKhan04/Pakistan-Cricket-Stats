@@ -1,76 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Pakistan Cricket Assistant</title>
-    <link rel="stylesheet" href="/static/styles.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pakistan Cricket Assistant</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
 <body>
-    <div class="chat-container">
-        <!-- 💬 Header -->
-        <div class="chat-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background-color: #7a5dfd; color: white;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <h1 style="margin: 0;">Pakistan Cricket Stats</h1>
-                <div class="bot-info" style="display: flex; align-items: center; gap: 6px;">
-                    <i class="fas fa-robot"></i>
-                    <span>Online</span>
-                </div>
-            </div>
+  <div class="chat-container">
 
-            <!-- 🔧 Controls (right-aligned) -->
-            <div class="chat-controls" style="display: flex; align-items: center; gap: 10px;">
-                <button id="clear-chat-btn" title="Clear Chat">
-                    <i class="fas fa-trash"></i>
-                </button>
-                <button id="save-chat-btn" title="Save Chat">
-                    <i class="fas fa-download"></i>
-                </button>
-                <select id="voiceSelect" title="Choose Voice"></select>
-            </div>
+    <!-- 💬 Header -->
+    <div class="chat-header">
+      <div class="header-title">
+        <h1 class="chat-title">Pakistan Cricket Stats</h1>
+      </div>
+
+      <div class="chat-controls">
+        <button id="clear-chat-btn" class="icon-btn" title="Clear Chat">
+          <i class="fas fa-trash"></i>
+        </button>
+        <button id="save-chat-btn" class="icon-btn" title="Save Chat">
+          <i class="fas fa-download"></i>
+        </button>
+
+        <!-- 🔊 Voice Toggle Icon -->
+        <button id="voice-toggle-btn" class="icon-btn" title="Toggle Voice">
+          <i id="voice-icon" class="fas fa-volume-up"></i>
+        </button>
+
+        <!-- 🎙️ Voice Dropdown -->
+        <div class="voice-dropdown" title="Choose Voice">
+          <button class="voice-btn" onclick="toggleVoiceDropdown()">
+            <i class="fas fa-caret-down"></i>
+          </button>
+          <div class="voice-select-box" id="voiceDropdown">
+            <select id="voiceSelect" onchange="setSelectedVoice(this)">
+              <option disabled selected hidden>Select voice</option>
+            </select>
+          </div>
         </div>
-
-        <!-- 📩 Chat Messages -->
-        <div class="chat-messages" id="chat-messages">
-            <div class="message bot-message">
-                <div class="message-content">
-                    <p>Hello! I'm your Pakistan Cricket Assistant. How can I help you today?</p>
-                </div>
-                <div class="message-time">Just now</div>
-            </div>
-        </div>
-
-        <!-- ✍️ Chat Input -->
-        <form class="chat-input" id="chat-form" style="display: flex; gap: 10px; padding: 10px 20px;">
-            <input type="text" id="user_input" name="user_input" placeholder="Type your message here..." autocomplete="on" required style="flex: 1; padding: 8px;" />
-            <button type="submit">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-            <!-- 🎙️ Microphone -->
-            <button type="button" onclick="startRecognition()" title="Speak">
-                <i class="fas fa-microphone"></i>
-            </button>
-        </form>
+      </div>
     </div>
 
-    <!-- 📜 Chat Logic -->
-    <script src="/static/scripts.js"></script>
+    <!-- 📩 Chat Messages -->
+    <div class="chat-messages" id="chat-messages">
+      <div class="message bot-message animate-fade">
+        <div class="message-content">
+          <p>Hello! I'm your Pakistan Cricket Assistant. How can I help you today?</p>
+        </div>
+        <div class="message-time">Just now</div>
+      </div>
+    </div>
 
-    <!-- 🎤 Voice Recognition -->
-    <script>
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'en-US';
+    <!-- ✍️ Chat Input -->
+    <form class="chat-input" id="chat-form">
+      <input type="text" id="user_input" name="user_input" placeholder="Type your message here..." autocomplete="on" required />
+      <button type="submit" title="Send">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+      <button type="button" id="mic-btn" title="Speak">
+        <i class="fas fa-microphone"></i>
+      </button>
+    </form>
+  </div>
 
-        function startRecognition() {
-            recognition.start();
-        }
-
-        recognition.onresult = function(event) {
-            const transcript = event.results[0][0].transcript;
-            document.getElementById('user_input').value = transcript;
-            document.getElementById('chat-form').requestSubmit();
-        };
-    </script>
+  <!-- JavaScript -->
+  <script src="/static/scripts.js"></script>
 </body>
 </html>
