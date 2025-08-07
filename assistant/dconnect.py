@@ -1,4 +1,4 @@
-import os
+'''import os
 from dotenv import load_dotenv
 import mysql.connector
 
@@ -17,4 +17,5 @@ try:
     print("Database connection successful!")
     conn.close()
 except Exception as e:
-    print("Database connection failed:", e)
+    print("Database connection failed:", e)'''
+
